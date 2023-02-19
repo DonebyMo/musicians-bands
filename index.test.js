@@ -74,6 +74,49 @@ describe("Association test", () => {
     const songs = await band1.getSongs();
     expect(songs.length).toBe(2);
   });
+  test("Multiple bands can have the same Song", async () => {
+    await sequelize.sync({ force: true }); // recreate db
+    let band1 = await Band.create({ name: "band1", genre: "Rock" });
+    let band2 = await Band.create({ name: "band2", genre: "Pop" });
+
+    let song1 = await Song.create({ title: "song1", year: 2023 });
+
+    await band1.addSong(song1);
+    await band2.addSong(song1);
+
+    expect(band1[0] === band2[0]).toBe(true);
+  });
+});
+
+describe("Eager Loading", () => {
+  test("musician model can be found with Band when findAll() is called", async () => {
+    await sequelize.sync({ force: true });
+    let band1 = await Band.create({ name: "band1", genre: "Rock" });
+    let band2 = await Band.create({ name: "band2", genre: "Pop" });
+    let musician1 = await Musician.create({
+      name: "m1",
+      instrument: "Voice",
+    });
+
+    bands = Band.findAll({
+      include: [{ model: Musician }],
+    });
+
+    expect.arrayContaining(Musician);
+  });
+
+  test("Song model can be found with Band when findAll() is called", async () => {
+    await sequelize.sync({ force: true });
+    let band2 = await Band.create({ name: "band2", genre: "Pop" });
+    let song1 = await Song.create({ title: "song1", year: 2023 });
+    let song2 = await Song.create({ title: "song2", year: 2023 });
+
+    bands = Band.findAll({
+      include: [{ model: Song }],
+    });
+
+    expect.arrayContaining(Song);
+  });
 });
 
 // const someBand = await Band.findAll();
